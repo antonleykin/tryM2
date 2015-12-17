@@ -1,0 +1,148 @@
+<html>
+  <head>
+    <title>
+   *** Elimination theory ***
+    </title>
+  </head>
+<body>
+<div>
+    <h4></h4>
+<p>
+    Elimination theory addresses the general ideas 
+    of elimination of variables (from the algebraic point of view)
+    and dimension reduction (from the geometric point of view)
+    in systems of polynomial equations and varieties they define, respectively. 
+</p>
+<p>
+    * Eliminating monomial orders
+</p>
+<p>
+    * Solving systems of equations
+</p>
+<p>
+    * Projection of varieties
+</p>
+</div>
+<div>
+    <h4>Eliminating monomial orders</h4>
+<p>
+    The lexicographic order 
+</p>
+<code>Rlex = QQ[x,y,z,MonomialOrder=>Lex]   </code><br/>
+<p>
+    can be considered as an order eliminating x and x,y.
+    Let us &ldquo;eliminate&rdquo; variables from the system of polynomials
+</p>
+<code>F = {x^2+y^2+z^2-4, x^2+2*y^2-5, x*y*z-y}</code><br/>
+<p>
+    by computing a Gröbner basis:
+</p>
+<code>getGB = flatten@@entries@@gens@@gb@@ideal</code><br/>
+<code>G = getGB F</code><br/>
+<p>
+    Notice that 
+</p>
+<code>take(G,1)</code><br/>
+<p>
+    generates the ideal <i>I &cap; &#x211A;[z]</i>, where <i>I=&lt;F></i>, and
+</p>
+<code>take(G,3)</code><br/>
+<p>
+    are generators of <i>I &cap; &#x211A;[y,z]</i>.
+</p>
+<p>
+    There are other ways to define elimination orders: for example, one may specify the number of variables to eliminate
+</p>
+<code>Re1 = QQ[x,y,z,MonomialOrder=>Eliminate 1] </code><br/>
+<code>getGB sub(matrix{F},Re1)</code><br/>
+<p>
+    or give positive weights to the variables that ought to be eliminated and zero to the rest
+</p>
+<code>R100 = QQ[x,y,z,Weights=>{1,2,0}]</code><br/>
+<code>getGB sub(matrix{F},R100)</code><br/>
+<p>
+    There is also a blackbox function which eliminates specified variables and returns the generators of intersection with the subring of polynomials in the remaining variables:
+</p>
+<code>use Rlex</code><br/>
+<code>eliminate({x},ideal F) </code><br/>
+<code>eliminate({x,y},ideal F)</code><br/>
+</div>
+<div>
+    <h4>Solving systems of equations</h4>
+<p>
+    If a system of polynomial equations 
+    has finitely many solutions (over an algebraically closed field: think <i><b>C</b></i>)
+    then they can be found via elimination.
+    Passing form polynomials <i>F</i> to the Gröbner basis <i>G</i> (see the preceding part)
+    we, in particular, get a univariate polynomial in <i>z</i> that factors (over <i>&#x211A;</i>).
+</p>
+<code>use Rlex; print F; print G; </code><br/>
+<code>factor G#0</code><br/>
+<p>
+    It reveals in particular that there is a point in <i>V(F)</i> with <i>z=1</i>.
+    Substituting <i>z=1</i> in the polynomials in <i>G &cap; &#x211A;[y,z]</i> 
+</p>
+<code>apply(0..2, i->sub(G#i,{z=>1}))</code><br/>
+<p>
+    we see that the <i>y</i>-coordinate can take the values plus or minus square root of <i>2</i>, which are not in <i>&#x211A;</i>.
+    One way to carry on is to extend <i>&#x211A;</i>:
+</p>
+<code>QQa = toField(QQ[a]/(a^2-2))</code><br/>
+<p>
+    The point <i>(x,a,1)</i> has to satisfy the following equations:
+</p>
+<code>M = map(QQa[x],Rlex,{x,a,1}) -- (x,y,z) maps to (x,a,1)</code><br/>
+<code>equations'for'x = apply(G,g->M g)  </code><br/>
+<p>
+    There is only one possible value for <i>x</i>, since
+</p>
+<code>gcd equations'for'x</code><br/>
+<p>
+    Conclusion: there are two points in <i>k<sup>3</sup></i>, <i>k=&#x211A;(&alpha;<sup>2</sup>-2)</i>, whose projection to the <i>xy</i>-plane is <i>(0,0,1)</i>, namely <i>(1,&alpha;,1)</i> and <i>(1,-&alpha;,1)</i>.
+</p>
+</div>
+<div>
+    <h4>Projection</h4>
+<p>
+    Consider the problem of projecting the
+    &ldquo;twisted cubic&rdquo;, a curve in <i><b>C</b><sup>3</sup></i> that can be defined
+    by the three <i>2&times;2</i> minors of a
+    <i>2&times;3</i> matrix into the plane.  
+</p>
+<code>QQ[x,y,z]</code><br/>
+<code>I = minors(2, matrix{{1,x,y},{x,y,z}})</code><br/>
+<p>
+    Such problems can be solved in a very 
+    simple and direct way using Gröbner bases.
+    The technique lends itself to many extensions,
+    and in its developed form can be used to find
+    the closure of the image of any map of 
+    affine varieties.  
+    Here is how the twisted cubic &ldquo;looks&rdquo; projected to the coordinate planes:
+</p>
+<code>eliminate({x},I)</code><br/>
+<code>eliminate({y},I)</code><br/>
+<code>eliminate({z},I)</code><br/>
+<p>
+    We can also project to an arbitrary plane along an arbitrary projection map by considering a linear change of variables:
+</p>
+<code>eliminate(x, sub(I, {x=>x+y+z+1, y=>x+2*y+3*z+5, z=>z}))</code><br/>
+</div>
+<div>
+    <h4>Implicitization</h4>
+<p>
+    <em>Whitney umbrella</em> surface <i>W</i> is parametrized by <i>x = uv, y = v, z = u<sup>2</sup></i>. To find the implicit description (equations in
+    <i>x,y,z</i>) for <i>W</i> we consider the graph <i>&Gamma;<sub>&phi;</sub></i> of the map
+    <p align=center><i>&phi;(u,v)=(uv,v,u<sup>2</sup>)</i></p> and construct its vanishing ideal <i>I = <b>I</b>(&Gamma;<sub>&phi;</sub>)</i>,
+</p>
+<code>QQ[u,v,x,y,z]; I = ideal(x - u*v, y - v, z - u^2)</code><br/>
+<p>
+    Eliminating <i>u</i> and <i>v</i> we get an ideal
+</p>
+<code>J = eliminate({u,v},I)</code><br/>
+<p>
+    such that <i><b>V</b>(J) = </i>Zariski closure<i>(&phi;(<b>C</b><sup>2</sup>))</i>.   
+</p>
+    </div>
+  </body>
+</html>

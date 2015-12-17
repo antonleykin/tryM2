@@ -251,6 +251,7 @@ writeout = (group) -> (
 tutorialToSimpleDoc = method()
 tutorialToSimpleDoc String := (x) -> (
      x = lines x;
+     headline := first x; x = drop(x,1); 
      x = select(x, line -> not mat("^[[:space:]]*$",line));
      x = select(x, line -> not mat("-\\*-", line));
      head := false;
@@ -280,7 +281,7 @@ tutorialToSimpleDoc String := (x) -> (
             line -> line#0 === "SUBSECTION",
             toList,
             identity);
-     "Description\n" | concatenate for group in x3 list (
+     "Headline\n   " | headline | "\nDescription\n" | concatenate for group in x3 list (
           writeout group
           )
      )

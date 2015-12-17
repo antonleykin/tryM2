@@ -1,4 +1,4 @@
 schrootID=`cat /etc/clientID`
 cleanPath=`echo $1 | sed -e s/^file:\\\/\\\///`
 echo $cleanPath
-curl -s http://localhost:8002/viewHelp/$schrootID/$cleanPath 
+curl -s http://localhost:25151/viewHelp/$schrootID/$cleanPath 

@@ -1,0 +1,124 @@
+<html>
+  <head>
+    <title>
+   *** Quotient rings ***
+    </title>
+  </head>
+<body>
+<div>
+    <h4></h4>
+<p>
+    Gröbner bases techniques enable computations in <em>quotient</em> polynomial rings (algebras). 
+    In particular, if the algebra is finite-dimensional as a vector space such computations boiil down to linear algebra. 
+</p>
+<p>
+    * Defining a quotient ring
+</p>
+<p>
+    * Multiplication table
+</p>
+<p>
+    * Solving systems of equations via eigenvalues
+</p>
+</div>
+<div>
+    <h4>Defining a quotient ring</h4>
+<p>
+    Given an ideal <i>I</i> in a polynomial ring <i>R</i>,
+</p>
+<code>k = QQ; R = k[x,y,z]; I = ideal {x^2+y^2+z^2-4, x^2+2*y^2-5, x*y*z-y} </code><br/>
+<p>
+    one can define the <em>quotient ring</em>: 
+</p>
+<code>R0 = R/I; describe R0</code><br/>
+<p>
+    The (ring) dimension of the quotient ring is <i>0</i>  
+</p>
+<code>dim R0</code><br/>
+<p>
+    iff the <i>k</i>-vector space dimension is finite. <em>Standard monomials</em> 
+    with respect to the monomial order (chosen for <i>R</i>) for
+    a <i>k</i>-basis for <i>R/I</i>.
+</p>
+<code>B = basis R0</code><br/>
+<p>
+    The technology behind the <tt>basis</tt> function is simple: the basis
+    elements are exactly monomials not divisible by the generators of
+    the initial ideal of <i>I</i>,
+</p>
+<code>leadTerm I</code><br/>
+<p>
+    For a positive-dimensional quotient ring, e.g., the coordinate ring of the twisted cubic
+</p>
+<code>use R; R1 = R/ideal{y-x^2, z-x^3}</code><br/>
+<p>
+    one can not get a finite <i>k</i>-basis
+</p>
+<code>dim R1</code><br/>
+<code>basis R1</code><br/>
+<p>
+    but it is possible to get a part of the infinite basis given by
+    standard monomials by specifying a degree (range of degrees):
+</p>
+<code>basis(3,R1)</code><br/>
+<code>basis(0,5,R1)</code><br/>
+</div>
+<div>
+    <h4>Multiplication table</h4>
+<p>
+    Every element of a quotient ring is stored in its <em>normal form</em>, 
+    which is a linear combination of standard monomials
+    representing its coset.
+</p>
+<code>use R </code><br/>
+<code>f = random(2,R) </code><br/>
+<code>g = random(2,R)</code><br/>
+<code>RtoR0 = map(R0,R) -- maps are written right-to-left</code><br/>
+<code>RtoR0 f</code><br/>
+<code>RtoR0 g</code><br/>
+<p>
+    Note that two random quadric polynomials get rewritten in terms of standard monomials exclusively.
+    Internally this is accomplished by the polynomial division relative to a Gröbner basis.
+</p>
+<code>print(f*g); RtoR0(f*g)</code><br/>
+<code>lift(RtoR0(f*g),R) == (f*g) % I</code><br/>
+<p>
+    The standard basis and the multiplication table for a 0-dimensional ring
+</p>
+<code>use R0; describe R0</code><br/>
+<code>B = flatten entries basis R0 -- a list of standard monomials</code><br/>
+<code>Table table(B,B,(a,b)->a*b) </code><br/>
+<p>
+    <em>determine</em> the quotient ring.
+</p>
+</div>
+<div>
+    <h4>Solving systems of equations via eigenvalues</h4>
+<p>
+    Assume <i>I&sub;R</i> is a 0-dimensional ideal, for instance, take our running example: 
+</p>
+<code>print I</code><br/>
+<p>
+    For every polynomial function <i>g&isin;R</i> we can construct a multiplication matrix <i>M<sub>g</sub></i> 
+    representing the operator <i>[f] ↦[gf] &isin;R/I</i> relative to the standard basis. 
+</p>
+<code>multiplicationMatrix = (g,B) -> (<br/>
+    n := #B;<br/>
+    matrix apply(n, i->apply(n,j->toCC coefficient(B#j,g*B#i)))<br/>
+    ) </code><br/>
+<p>
+    Then the eigenvalues of <i>M<sub>g</sub></i> are the values of the function <i>g</i> at the points of <i><b>V</b>(I)</i>.
+</p>
+<code>M = multiplicationMatrix(x^2+y+z,B)</code><br/>
+<code>eigenvalues M</code><br/>
+<p>
+    To solve a system of polynomial equations one could compute all possible values for one of the coordinates
+</p>
+<code>M = multiplicationMatrix(z,B)</code><br/>
+<code>eigenvalues M</code><br/>
+<p>
+    and proceed using a back-substitution (of computed values for <i>z</i>).
+</p>
+    </div>
+  </body>
+</html>

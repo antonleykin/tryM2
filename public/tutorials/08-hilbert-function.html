@@ -1,0 +1,152 @@
+<html>
+  <head>
+    <title>
+   *** Hilbert function ***
+    </title>
+  </head>
+<body>
+<div>
+    <h4></h4>
+<p>
+    Hilbert function leads to Hilbert polynomial leading to a way to compute dimension and degree of a variety.
+</p>
+<p>
+    * Hilbert function and Hilbert polynomial
+</p>
+<p>
+    * Invariants: dimension and degree
+</p>
+</div>
+<div>
+    <h4>Hilbert function and Hilbert polynomial</h4>
+<p>
+    In a ring 
+</p>
+<code>R = QQ[x,y,z];</code><br/>
+<p>
+    with the default (<em>graded</em> reverse lexicographic) order take the following ideal 
+</p>
+<code>sph = x^2+y^2+z^2-1;</code><br/>
+<code>I = ideal {sph*(x-1), sph*(y-2)}</code><br/>
+<p>
+    The <em>Hilbert function</em> <i>H<sub>R/I</sub>(d)</i> is defined as the vector-space
+    dimension of <i>R<sub>d</sub>/I<sub>d</sub></i> where <i>R<sub>d</sub></i> are polynomials of degree at
+    most <i>d</i> and <i>I<sub>d</sub> = I &cap;R<sub>d</sub></i>.
+    To get a value of the Hilbert function one can count standard monomials:
+</p>
+<code>B = basis(0,3,R/I) </code><br/>
+<code>numcols B</code><br/>
+<p>
+    In this example <i>H<sub>R/I</sub>(3) = 20</i>.
+</p>
+<p>
+    The built-in function computes another variant of the function, the
+    <em>projective</em> Hilbert function: the only dirrence is that
+    instead of at most degree <i>d</i> <em>exactly</em> degree <i>d</i> polynomials
+    are considered.
+</p>
+<code>hilbertFunction(3,R/I) </code><br/>
+<p>
+    There is an obvious relationship between the two, for instance,
+</p>
+<code>18 == sum({0,1,2,3}, d->hilbertFunction(d,R/I))</code><br/>
+<p>
+    Note that the Hilbert function for the initial ideal is the
+    same. In fact, one way to compute the function is via monomial cone
+    decomposition of the set of standard monomials: there is a function
+    producing the <em>standard pairs</em> for a given monomial ideal
+    describing such a decomposition.
+</p>
+<code>inI = monomialIdeal I -- initial ideal of I</code><br/>
+<code>standardPairs inI</code><br/>
+<p>
+    For instance <i>{{x, {y, z}}</i> stands for the 2-dinesional cone
+    of multiples of <i>x</i> by monomials in <i>y</i> and <i>z</i>, while <i>{x<sup>3</sup> y<sup>3</sup> ,{}}</i> 
+    is a 0-dimensional cone, i.e., a single monomial.
+</p>
+<p>
+    The following function uses the monomial cone decomposition to compute the <em>Hilbert polynomial</em>
+</p>
+<code>HP = I -> ( <br/>
+    S := QQ[symbol s]; s := S_0;    <br/>
+    sum(standardPairs monomialIdeal I, mx ->(<br/>
+        (m,x) := toSequence mx; t := sum degree m; <br/>
+        product(#x,i->s-t+1+i)/(#x)! -- s-t+#x choose s-t<br/>
+        ))<br/>
+    )</code><br/>
+<code>HP I</code><br/>
+<p>
+    The Hilbert polynomial agrees with the Hilbert function for <i>d</i> large enough, for instance,
+</p>
+<code>sub(HP I,matrix{{3}})</code><br/>
+<p>
+    coincides with the previously computed value, however
+</p>
+<code>sub(HP I,matrix{{0}})</code><br/>
+<p>
+    is clearly not the value of the Hilbert function.
+</p>
+</div>
+<div>
+    <h4>Invariants: dimension and degree</h4>
+<p>
+    The dimension of the variety <i>V(I)</i> equals the degree of the Hilbert polynomial
+</p>
+<code>sph = x^2+y^2+z^2-1; I = ideal {sph*(x-1), sph*(y-2)}</code><br/>
+<code>h = HP I </code><br/>
+<code>d = first degree h </code><br/>
+<code>dim I</code><br/>
+<p>
+    while the leading coefficient determines the <em>degree</em> of the variety
+</p>
+<code>deg = d! * leadCoefficient h</code><br/>
+<code>deg == degree I</code><br/>
+<p>
+    Alternatively, the degree is the number of points of intersection
+    of the variety and a general affine plane of codimension <i>d</i>.
+</p>
+<p>
+    The Hilbert polynomial, however, is a stronger invariant than
+    dimension and degree and the Hilbert function is even stronger.
+</p>
+<p>
+    Consider two point and a line not passing through them.
+</p>
+<code>R = QQ[x,y,z]</code><br/>
+<code>A = ideal(x-1,y,z) -- (1,0,0)</code><br/>
+<code>B = ideal(x,y-1,z) -- (0,1,0)</code><br/>
+<code>line = ideal(x+y+z-3,x-2*y+3*z-5)</code><br/>
+<p>
+    While the dimension and degree of the varieties given by 
+</p>
+<code>Aline = intersect(A,line); dim Aline, degree Aline</code><br/>
+<code>ABline = intersect(A,B,line); dim ABline, degree ABline</code><br/>
+<p>
+    are the same, the Hilbert polynomials are not:
+</p>
+<code>HP Aline</code><br/>
+<code>HP ABline</code><br/>
+<p>
+    Now consider another couple of points: 
+</p>
+<code>C = ideal(x-1/2,y-1/2,z) -- (1/2,1/2,0)</code><br/>
+<p>
+    is on the line AB and
+</p>
+<code>D = ideal apply(3,i->random(1,R)+random(0,R))</code><br/>
+<p>
+    is a random point that is likely not on that line.
+</p>
+<p>
+    The Hilbert polynomials are, expectedly, the same,
+</p>
+<code>ABC = intersect(A,B,C);ABD = intersect(A,B,D);</code><br/>
+<code>HP ABC == HP ABD</code><br/>
+<p>
+    but the Hilbert function distinguishes the triple of colinear
+    points from the triple in general position:
+</p>
+<code>hilbertFunction(1,ABC) != hilbertFunction(1,ABD)</code><br/>
+    </div>
+  </body>
+</html>

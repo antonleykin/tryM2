@@ -1,0 +1,103 @@
+<html>
+  <head>
+    <title>
+   *** Numerical varieties ***
+    </title>
+  </head>
+<body>
+<div>
+    <h4></h4>
+<p>
+    Numerical algebraic geometry machinery gives a way to perform basic
+    operations such as union, intersection, subtraction, projection,
+    and irreducible decomposition of complex affine varieties
+    represented by collections of witness sets. 
+</p>
+<p>
+    * Numerical variety
+</p>
+<p>
+    * Numerical irreducible decomposition
+</p>
+<p>
+    * Intersection
+</p>
+</div>
+<div>
+    <h4>Numerical variety</h4>
+<code>needsPackage "NumericalAlgebraicGeometry"</code><br/>
+<p>
+    A <em>numerical variety</em> is a collection of witness sets:
+</p>
+<code>CC[x,y,z];</code><br/>
+<code>w2 := witnessSet(ideal (x^2+y), 2) </code><br/>
+<code>w1 := witnessSet(ideal (x^2-y,z), 1) </code><br/>
+<code>w0 := witnessSet(ideal (x-1,y-1,z), 0) </code><br/>
+<code>w0' := witnessSet(ideal (x,y-1,z), 0) </code><br/>
+<code>V := numericalVariety {w2,w1,w0,w0'}</code><br/>
+<p>
+    The numerical variety above has redundant components: <i>(1,1,0)</i>
+    represented by <tt>w0</tt> is contained in the (higher-dimensional)
+    component <tt>w1</tt>.  
+</p>
+<code>isSubset(w0,w1)</code><br/>
+<p>
+    One can remove redundant components:
+</p>
+<code>removeRedundantComponents V; V</code><br/>
+</div>
+<div>
+    <h4>Numerical irreducible decomposition</h4>
+<p>
+    One of the main functions driving the decomposition algorithms
+    constructs a numerical variety corresponding to the intersection of
+    a given numerical variety with a hypersurface.
+</p>
+<code>V' := hypersurfaceSection (V,x^2+y^2+z^2-1)</code><br/>
+<p>
+    Another main routine handles the <em>numerical irreducible decomposition</em> 
+    of an equidimensional witness set via <em>monodromy breakup</em>.
+</p>
+<code>decompose last V'#0 -- V'#0 picks out the list of dim=0 components</code><br/>
+<code>w2 = witnessSet(ideal((x^2+y^2+z^2-1)*(x+y^2+z^3)),2)</code><br/>
+<code>decompose w2</code><br/>
+<p>
+    There is a black-box method that combines the above to give a numerical
+    variety consisting of irreducible witness sets.
+</p>
+<code>sph = (x^2+y^2+z^2-1); </code><br/>
+<code>I = ideal {sph*(x-1)*(y-x^2), sph*(y-2)*(z-x^3)};</code><br/>
+<code>V = numericalIrreducibleDecomposition I </code><br/>
+</div>
+<div>
+    <h4>Intersection</h4>
+<p>
+    The general problem of finding the intersection of two numerical
+    varieties reduces to that for two witness sets.
+</p>
+<code>clearAll; CC[x_1..x_3]</code><br/>
+<code>w1 = witnessSet (ideal (x_1^2+x_2), 2)</code><br/>
+<code>w2 = witnessSet (ideal (x_1^2+x_2^2-1), 2)</code><br/>
+<code>V = numericalIntersection(w1,w2)</code><br/>
+<p>
+    Note that the output of <tt>numericalIntersection</tt> is a collection
+    of witness sets that mat involve additional variables.
+</p>
+<code>w12 := first V#1</code><br/>
+<code>ring w12</code><br/>
+<p>
+    While, in general, defining equations for the actual intersection
+    are not computed, one has a description of the intersection as a
+    projection of a variety in a higher-dimenstional ambient space. For
+    instance, in our example the intersection is decomposable:
+</p>
+<code>decompose w12</code><br/>
+<p>
+    Taking the first three coordinates of a witness point gives a point
+    in the intersection.
+</p>
+<code>P := project(first w12.Points,3)</code><br/>
+<code>isOn(P,w1) and isOn(P,w2)</code><br/>
+    </div>
+  </body>
+</html>

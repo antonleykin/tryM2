@@ -3,4 +3,4 @@
 #echo $$
 #echo "parent PID" 
 #echo $PPID
-curl -s http://localhost:8002/image/$PPID/$1 
+curl -s http://localhost:25151/image/$PPID/$1 

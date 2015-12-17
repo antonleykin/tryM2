@@ -1,0 +1,251 @@
+<html>
+  <head>
+    <title>
+   *** Polynomial homotopy continuation ***
+    </title>
+  </head>
+<body>
+<div>
+    <h4></h4>
+<p>
+    Using numerical polynomial homotopy continuation one can find
+    approximations to all solutions of a 0-dimensional polynomial
+    system
+</p>
+<p>
+    * Newton&rsquo;s method
+</p>
+<p>
+    * Blackbox solver for a square system
+</p>
+<p>
+    * Singular solutions
+</p>
+<p>
+    * Certification
+</p>
+</div>
+<div>
+    <h4>Newton's method</h4>
+<code>needsPackage "NumericalAlgebraicGeometry"</code><br/>
+<p>
+    Applied to a starting point sufficiently close to a <em>regular</em>
+    solution of a square system Newton&rsquo;s method converges to that
+    solution quadratically.
+</p>
+<code>CC[x,y,z]; F = polySystem {x^2+y^2+z^2-5,x+y-3,x^2+z-1} </code><br/>
+<code>P = point {{1.2,2.+0.2*ii,0.1*ii}} </code><br/>
+<code>for i from 1 to 10 do (<br/>
+    P = newton(F,P);<br/>
+    print (coordinates P, P.ErrorBoundEstimate);<br/>
+    )</code><br/>
+<p>
+    If the solution is singular, the method converges slower and the
+    number of correct digits obtained at a fixed machine precision is
+    smaller.
+</p>
+<code>CC[x,y,z]; F = polySystem {x^2+y^2+z^2-5,x+y-3,x^2+z^3-1} </code><br/>
+<code>P = point {{1.2,2.+0.2*ii,0.1*ii}} </code><br/>
+<code>for i from 1 to 10 do (<br/>
+    P = newton(F,P);<br/>
+    print (coordinates P, P.ErrorBoundEstimate);<br/>
+    )</code><br/>
+<code>numericalRank evaluate(jacobian F, P)</code><br/>
+<p>
+    It is also possible to define an iteration of Newton&rsquo;s method for
+    an overdetermined system using <em>Moore-Penrose pseudoinverse</em> of
+    the Jacobian.
+</p>
+<code>CC[x,y]; F = polySystem {x^3+y^3-2,x^2+y^2-2,x+y-2}</code><br/>
+<code>P = point {{1.2,1.2+0.2*ii}} </code><br/>
+<code>for i from 1 to 10 do (<br/>
+    P = newton(F,P);<br/>
+    print (coordinates P, P.ErrorBoundEstimate);<br/>
+    )</code><br/>
+</div>
+<div>
+    <h4>Blackbox solver for a square system</h4>
+<p>
+    One may attempt solving a square polynomial system using the blackbox solver.
+</p>
+<code>R = CC[x,y];</code><br/>
+<code>F = {x^2+y^2-1, x*y};</code><br/>
+<code>sols = solveSystem F </code><br/>
+<p>
+    Some information describing a quality of solution is stored in the <tt>Point</tt> object,
+</p>
+<code>s = first sols; peek s</code><br/>
+<p>
+    where some fields can be accessed by shortcut functions:
+</p>
+<code>status s</code><br/>
+<code>coordinates s</code><br/>
+<p>
+    Many tricks can be used to format the output:
+</p>
+<code>VerticalList sols</code><br/>
+<code>clean_0.0001 matrix(sols/coordinates)</code><br/>
+<p>
+    The blackbox solver employs a randomized algorithm that returns
+    <em>all</em> solutions of a square system with probability one
+    provided the system is 0-dimensional.
+</p>
+<p>
+    The <em>total-degree homotopy</em> is at the heart of the
+    computation. Obtaining the start system and start solutions,
+</p>
+<code>(G,solsG) = totalDegreeStartSystem F</code><br/>
+<p>
+    the solver launches the segment homotopy tracker for 
+    <p align=center><i>H<sub>t</sub> = (1-t) G + &gamma;t F,  t&isin;[0,1].</i></p> 
+</p>
+<code>track(G,F,solsG,gamma=>random CC)</code><br/>
+<p>
+    There are many optional parmaters that can be tuned in the tracker:
+</p>
+<code>options track     </code><br/>
+<p>
+    Another outcome of tracking could be divergence (established
+    heuristically).  In that case the divergent paths are
+    marked with an I (status is set to "Infinity").
+</p>
+<code>F = {x^2+y^2-1, x-y};</code><br/>
+<code>track(G,F,solsG,gamma=>0.6+0.8*ii) </code><br/>
+<p>
+    Some divergent paths as well as most of the paths ending in
+    singular (multiplicity>1) or near-singular (clustered) solutions
+    are marked with an M (status is set to "MinStepFailure").
+</p>
+<code>F = {x^2+y^2-1, (x-y)^2};</code><br/>
+<code>track(G,F,solsG) </code><br/>
+</div>
+<div>
+    <h4>Singular solutions</h4>
+<p>
+    As we saw before, the tracking routine assumes regularity of a
+    homotopy path and stops short of <i>t=1</i> if the path end in a
+    singular solution.
+</p>
+<code>d = 3; F = {(x-2)^d,y-x+x^2-x^3}</code><br/>
+<code>solsF = track(G,F,solsG,gamma=>0.6+0.8*ii)</code><br/>
+<code>peek last solsF</code><br/>
+<p>
+    There is a two-step procedure of processing singular solutions that
+    consists of
+</p>
+<p>
+    (1) refining an approximation using homotopy <em>endgame</em>,
+</p>
+<p>
+    (2) regularizing (restoring quadratic convergence of Newton&rsquo;s method) via <em>deflation</em>.
+</p>
+<p>
+    The <em>Cauchy endgame</em> utilizes <em>Cauchy integral theorem</em> in
+    order to obtain a better approximation for a solution as a
+    numerical approximation to a certain integral.
+</p>
+<p>
+    We create a segment homotopy
+</p>
+<code>H = segmentHomotopy(polySystem G, polySystem (ii*F))</code><br/>
+<p>
+    and track it to a value of <i>t</i> close, but not too close, to <i>1</i>.
+</p>
+<code>t0 = 0.99</code><br/>
+<code>solsT = trackSegment(H,0,t0,solsG)</code><br/>
+<code>x0 := first select(solsT, p->norm matrix p < 15)</code><br/>
+<p>
+    Approximating a circle with a triangle and octagon we already get better approximations.
+</p>
+<code>debug NumericalAlgebraicGeometry</code><br/>
+<code>endGame'Cauchy'polygon(H,1,t0,x0,3)</code><br/>
+<code>endGame'Cauchy'polygon(H,1,t0,x0,8)</code><br/>
+<code>(x1,winding'number) = endGame'Cauchy'polygon(H,1,t0,x0,16)</code><br/>
+<p>
+    The following call performs one step deflation and returns the
+    numerical rank of the Jacobian at the point.
+</p>
+<code>sysF = polySystem F</code><br/>
+<code>P = point{x1}; r = deflate(sysF, P)</code><br/>
+<p>
+    The deflated system can be inspected as follows:
+</p>
+<code>peek sysF</code><br/>
+<code>sysF.Deflation#1</code><br/>
+<p>
+    Another function makes sure as many deflation steps are performed
+    as needed. For the running example, just one step suffices.
+</p>
+<code>deflateInPlace(P,sysF)</code><br/>
+<code>peek P</code><br/>
+<p>
+    Here is an example where two steps are necessary.
+</p>
+<code>CC[x,y,z]; F = polySystem {x^3,y^3,x^2*y,z*(z-1)^2}</code><br/>
+<code>P = point {{0.000001, 0.000001*ii,1.000001-0.000001*ii}}</code><br/>
+<code>deflateInPlace(P,F)</code><br/>
+<code>peek P</code><br/>
+<p>
+    The <em>deflation sequence</em> records the ranks of Jacobians (in this case
+    of an original system and its first deflation).
+</p>
+<code>P.DeflationSequence</code><br/>
+</div>
+<div>
+    <h4>Certification</h4>
+<p>
+    To certify an approximation as a numerical zero associated to a
+    regular solution of the system one may use Smale&rsquo;s <i>&alpha;</i>-test.
+</p>
+<code>QQ[x,y]; F = polySystem {x^2+y^2-2, x-y};</code><br/>
+<p>
+    We shall show that point <i>P</i> is an <em>approximate zero</em> (associated to <i>(1,1)</i>, an actual zero of <i>F</i>).  
+</p>
+<code>P = point {{101/100, 99/100}}</code><br/>
+<code>x0 = transpose matrix P</code><br/>
+<p>
+    Most of the ingredients in the <i>&alpha;</i>-test will be squared to
+    avoid computation of square roots. Define a function for the square
+    of the Euclidean/Riemannian norm:
+</p>
+<code>norm'2 = v -> sum(flatten entries v, x->x^2) </code><br/>
+<p>
+    Find <i>&beta;<sup>2</sup></i>:
+</p>
+<code>DF0 = evaluate(jacobian F,P);</code><br/>
+<code>invDF0 = inverse DF0;</code><br/>
+<code>beta'2 = norm'2 ( invDF0 * evaluate(F,P))</code><br/>
+<p>
+    The <em>Bombieri-Weyl norm</em> is the norm on polynomials invariant
+    under orthogonal/unitary transformations of coordinates.
+</p>
+<code>normBW'2 = F -> sum(equations F, f->(<br/>
+        R := ring f;<br/>
+        RH := (coefficientRing R) monoid([gens R, symbol t]);     <br/>
+        t :=  last gens RH;<br/>
+        sum(listForm homogenize(sub(f,RH),t), a->(<br/>
+                imc := product(a#0, d->d!) / (sum(a#0))!; -- inverse of multinomial coeff<br/>
+                imc*a#1*conjugate a#1 <br/>
+                ))<br/>
+        ))</code><br/>
+<p>
+    Find a bound for <i>&gamma;<sup>2</sup></i>:    
+</p>
+<code>deg = first@@degree \ equations F </code><br/>
+<code>Delta = diagonalMatrix apply(deg, d->d*(1+norm'2 x0)^(d-1))</code><br/>
+<code>mu'2 = (F,P) -> max { 1, normBW'2 F * norm'2(invDF0*Delta) } -- Frobenius norm used instead of operator norm</code><br/>
+<code>gamma'bound'2 = mu'2(F,P) * (max deg)^3 / (4 * (1 + norm'2 x0)^2)</code><br/>
+<p>
+    Finally, if <i>&alpha;&lt; 0.157671</i> then we conclude that <i>P</i> is an approximate zero of <i>F</i>. 
+</p>
+<code>alpha'2 = beta'2 * gamma'bound'2</code><br/>
+<code>alpha'2 < (157671 / 1000000)^2</code><br/>
+<p>
+    Note that all arithmetic operations involved above are exact, since
+    the field <i>&#x211A;</i> is used.  The same code works over any field
+    allowed by the system. However, computing over <em>inexact fields</em>
+    <i>&#x211D;</i> and <i><b>C</b></i> does not provide rigorous certification.
+</p>
+    </div>
+  </body>
+</html>

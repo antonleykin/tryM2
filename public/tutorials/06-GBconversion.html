@@ -1,0 +1,116 @@
+<html>
+  <head>
+    <title>
+   *** Gröbner bases conversion***
+    </title>
+  </head>
+<body>
+<div>
+    <h4></h4>
+<p>
+    For a 0-dimensional ideal an FGLM-style bases conversion algorithm relies on linear algebra. 
+</p>
+<p>
+    * Subroutines
+</p>
+<p>
+    * Main algorithm
+</p>
+</div>
+<div>
+    <h4>Subroutines</h4>
+<p>
+    For our running example <i>k=&#x211A;</i>,
+</p>
+<code>R = QQ[x,y];</code><br/>
+<code>I = ideal(y^4*x+3*x^3-y^4-3*x^2, <br/>
+     x^2*y-2*x^2,<br/>
+     2*y^4*x-x^3-2*y^4+x^2); </code><br/>
+<p>
+    compute a GB using relative to the default (GRevLex) monomial order
+</p>
+<code>getGB = flatten@@entries@@gens@@gb</code><br/>
+<code>G1 = getGB I</code><br/>
+<p>
+    A function that finds the border of a give monomial set:
+</p>
+<code>border = B -> (<br/>
+    R := ring matrix {B};<br/>
+    B' := set {}; <br/>
+    for b in B do scan(numgens R, i ->(<br/>
+            b' := b*R_i;<br/>
+            if not member(b',B) then B'=B'+set{b'};<br/>
+            ));<br/>
+    toList B'<br/>
+    )</code><br/>
+<p>
+    One of the main subroutines needs to find the next unprocessed monomial:
+</p>
+<code>nextMonomial = (B,G) -> (<br/>
+    C := select(border B, b'->all(G, g-> b' % leadMonomial g != 0));<br/>
+    if #C>0 then min C else null<br/>
+    )</code><br/>
+<p>
+    Another one computes a polynomial <i>f</i> as a <i>k</i>-linear combination
+    of the given list of polynomials:
+</p>
+<code>linearCombination = (f,Bbar) ->  (<br/>
+    M := last coefficients matrix {{f}|Bbar};<br/>
+    Mf := M_{0};<br/>
+    M'Bbar := submatrix'(M,{0});<br/>
+    c := Mf //  M'Bbar;<br/>
+    if M'Bbar*c == Mf <br/>
+    then flatten entries sub(c,coefficientRing ring f)<br/>
+    else null<br/>
+    )</code><br/>
+<p>
+    Lets check the routine:
+</p>
+<code>linearCombination(G1#0+3*G1#2,G1)</code><br/>
+<code>linearCombination(x^3+y, G1) -- returns null</code><br/>
+</div>
+<div>
+    <h4>Main algorithm</h4>
+<code>FGLM = (G1,mo) -> (<br/>
+    I1 := ideal G1; R1 := ring I1;<br/>
+    if dim I1 != 0 then error "expected a 0-dimensional ideal";<br/>
+    R2 := newRing(R1,MonomialOrder=>mo); <br/>
+    m := 1_R2;<br/>
+    G2 := {}; B2 := {m}; B2bar := {1_R1};<br/>
+    while (m = nextMonomial(B2,G2)) =!= null do ( <br/>
+        f := sub(m,R1) % I;<br/>
+        if (c:=linearCombination(f,B2bar)) === null <br/>
+        then (B2 = B2 | {m}; B2bar = B2bar | {f})<br/>
+        else G2 = G2 | {m - sum(#B2, i->c#i*B2#i)}<br/>
+        );<br/>
+    G2<br/>
+    )</code><br/>
+<p>
+    For the running example,
+</p>
+<code>G1 = getGB I</code><br/>
+<p>
+    we compute 
+</p>
+<code>FGLM(G1,Lex) </code><br/>
+<p>
+    and compare with the built the results of the built-in method
+</p>
+<code>Rlex = newRing(R,MonomialOrder=>Lex)</code><br/>
+<code>getGB sub(I,Rlex) </code><br/>
+<p>
+    Similarly, 
+</p>
+<code>for i to 5 do (<br/>
+    mo = {Weights=>{i,1}};<br/>
+    << "w=(" << i << ",1)    FGLM: " << FGLM(G1,mo) << endl;<br/>
+    Rw = newRing(R,MonomialOrder=>mo);<br/>
+    << "w=(" << i << ",1)    M2gb: " << getGB sub(I,Rw) << endl;<br/>
+    print "---------------------------------------------------";<br/>
+    )</code><br/>
+<p>
+    shows the "evolution" of the bases as the weight monomial order is varied.
+</p>
+    </div>
+  </body>
+</html>

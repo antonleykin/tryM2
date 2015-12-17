@@ -12,7 +12,7 @@
 // Local version:
 //
 // In a browser, use: 
-//      http://localhost:8002/
+//      http://localhost:25151/
 // Requirements:
 //   Node.js libraries: cookies, connect, fs, http.  
 // Install via:
@@ -46,17 +46,17 @@ var fs = require('fs'),
 
 var M2Server = function (overrideOptions) {
     var options = {
-            port: 8002, // default port number to use
-            userMemoryLimit: 500000000, // Corresponds to 500M memory
-            userCpuLimit: 256, // Corresponds to 256 shares of the CPU.
-            // As stated wrongly on the internet this does NOT
-            // correspond to 25% CPU.  The total number of shares is
-            // determined as the sum of all these limits, i.e. if
-            // there is only one user, he gets 100% CPU.
-            PRUNECLIENTINTERVAL: 1000 * 60 * 10, // 10 minutes
-            MAXAGE: 1000 * 60 * 60 * 24 * 7, // 1 week
-            SCHROOT: false // if true: start with 'sudo make start' on server.
-        },
+        port: 25151, // default port number to use
+        userMemoryLimit: 500000000, // Corresponds to 500M memory
+        userCpuLimit: 256, // Corresponds to 256 shares of the CPU.
+        // As stated wrongly on the internet this does NOT
+        // correspond to 25% CPU.  The total number of shares is
+        // determined as the sum of all these limits, i.e. if
+        // there is only one user, he gets 100% CPU.
+        PRUNECLIENTINTERVAL: 1000 * 60 * 10, // 10 minutes
+        MAXAGE: 1000 * 60 * 60 * 24 * 7, // 1 week
+        SCHROOT: false // if true: start with 'sudo make start' on server.
+    },
 
         totalUsers = 0, //only used for stats: total # users since server started
         userNumber = 0, //number in the system
@@ -904,7 +904,7 @@ var M2Server = function (overrideOptions) {
 }; // end of def of M2Server
 
 //var m2server = M2Server();
-//m2server.listen(8002);
+//m2server.listen(25151);
 exports.M2Server = M2Server;
 
 // Local Variables:
